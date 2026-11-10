@@ -17,12 +17,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Configurar Wrapper de Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Generar Wrapper y Compilar APK
+      - name: Instalar Gradle y Compilar APK
         run: |
+          wget https://services.gradle.org/distributions/gradle-7.5-bin.zip
+          unzip -q gradle-7.5-bin.zip
+          export PATH=$PWD/gradle-7.5/bin:$PATH
+          
           gradle wrapper --gradle-version 7.5
+          chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Subir APK Generado
