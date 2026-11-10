@@ -1,6 +1,4 @@
 YAML
-
-
 name: Compilar APK Naruto
 on: [push]
 
