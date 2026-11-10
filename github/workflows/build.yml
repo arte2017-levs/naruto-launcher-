@@ -1,0 +1,369 @@
+YAML
+
+
+name: Compilar APK Naruto
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar Repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Java JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v2
+
+      - name: Dar permisos a Gradle
+        run: chmod +x gradlew || true
+
+      - name: Compilar APK (Debug)
+        run: ./gradlew assembleDebug
+
+      - name: Subir APK Generado
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-naruto-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+Verification: El archivo se guarda correctamente dentro de la carpeta .github/workflows.
+
+2
+Crear la configuración general de Gradle
+Ruta: settings.gradle
+Crea un nuevo archivo llamado settings.gradle en la raíz del proyecto y pega esto dentro:
+
+Groovy
+
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+rootProject.name = "NarutoLauncher"
+include ':app'
+Verification: El archivo queda guardado en la lista principal.
+
+3
+Crear el configurador del proyecto
+Ruta: build.gradle (en la raíz)
+Crea un archivo nuevo llamado build.gradle (a secas, en la raíz) y pega esto:
+
+Groovy
+
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+Verification: Guardado con éxito en la raíz del repositorio.
+
+4
+Crear la configuración de la app
+Ruta: app/build.gradle
+Crea un archivo nuevo escribiendo la ruta completa app/build.gradle y pega esto:
+
+Groovy
+
+
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.example.narutolauncher'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.example.narutolauncher"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0'
+}
+Verification: Carpeta app y archivo build.gradle creados correctamente.
+
+5
+Crear el Manifiesto de Android
+Ruta: app/src/main/AndroidManifest.xml
+Crea un archivo nuevo con la ruta app/src/main/AndroidManifest.xml y pega esto:
+
+XML
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.narutolauncher">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Naruto Online Client"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat.NoActionBar.FullScreen">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+Verification: Permisos y orientación horizontal configurados en el manifiesto.
+
+6
+Crear el diseño visual del HUD y botones
+Ruta: app/src/main/res/layout/activity_main.xml
+Crea un archivo nuevo con la ruta app/src/main/res/layout/activity_main.xml y pega esto:
+
+XML
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <WebView
+        android:id="@+id/myWebView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="10dp">
+
+        <Button
+            android:id="@+id/btnAccount1"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:text="Cuenta 1"
+            android:textSize="10sp"
+            android:alpha="0.8" />
+
+        <Button
+            android:id="@+id/btnAccount2"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:text="Cuenta 2"
+            android:textSize="10sp"
+            android:alpha="0.8"
+            android:layout_marginStart="5dp" />
+
+        <Button
+            android:id="@+id/btnToggleControls"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:text="🎮 Gamepad"
+            android:textSize="10sp"
+            android:alpha="0.8"
+            android:layout_marginStart="15dp" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/hudOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_margin="20dp">
+
+            <Button android:id="@+id/btnW" android:layout_width="50dp" android:layout_height="50dp" android:layout_gravity="center_horizontal" android:text="W" android:alpha="0.6" />
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal">
+                <Button android:id="@+id/btnA" android:layout_width="50dp" android:layout_height="50dp" android:text="A" android:alpha="0.6" />
+                <View android:layout_width="50dp" android:layout_height="50dp"/>
+                <Button android:id="@+id/btnD" android:layout_width="50dp" android:layout_height="50dp" android:text="D" android:alpha="0.6" />
+            </LinearLayout>
+            <Button android:id="@+id/btnS" android:layout_width="50dp" android:layout_height="50dp" android:layout_gravity="center_horizontal" android:text="S" android:alpha="0.6" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="20dp">
+
+            <Button android:id="@+id/btnQ" android:layout_width="55dp" android:layout_height="55dp" android:text="Q" android:alpha="0.6" android:layout_marginEnd="8dp"/>
+            <Button android:id="@+id/btnEsc" android:layout_width="55dp" android:layout_height="55dp" android:text="ESC" android:alpha="0.6"/>
+        </LinearLayout>
+    </RelativeLayout>
+</RelativeLayout>
+Verification: Estructura visual guardada correctamente.
+
+7
+Crear el código principal en Java
+Ruta: app/src/main/java/com/example/narutolauncher/MainActivity.java
+Crea el último archivo escribiendo la ruta completa app/src/main/java/com/example/narutolauncher/MainActivity.java y pega esto:
+
+Java
+
+
+package com.example.narutolauncher;
+
+import android.os.Bundle;
+import android.view.KeyEvent;
+import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+
+    private WebView myWebView;
+    private RelativeLayout hudOverlay;
+    private boolean areControlsVisible = true;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        myWebView = findViewById(R.id.myWebView);
+        hudOverlay = findViewById(R.id.hudOverlay);
+
+        WebSettings webSettings = myWebView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setLoadsImagesAutomatically(true);
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setUseWideViewPort(true);
+        webSettings.setSupportZoom(true);
+        webSettings.setBuiltInZoomControls(true);
+        webSettings.setDisplayZoomControls(false);
+        
+        myWebView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        myWebView.setWebViewClient(new WebViewClient());
+        myWebView.loadUrl("https://naruto.narutowebgame.com");
+
+        Button btnAccount1 = findViewById(R.id.btnAccount1);
+        btnAccount1.setOnClickListener(v -> myWebView.loadUrl("https://naruto.narutowebgame.com"));
+
+        Button btnAccount2 = findViewById(R.id.btnAccount2);
+        btnAccount2.setOnClickListener(v -> myWebView.loadUrl("https://naruto.narutowebgame.com"));
+
+        Button btnToggleControls = findViewById(R.id.btnToggleControls);
+        btnToggleControls.setOnClickListener(v -> {
+            if (areControlsVisible) {
+                hudOverlay.setVisibility(View.GONE);
+                areControlsVisible = false;
+                btnToggleControls.setText("👁️ Ver");
+            } else {
+                hudOverlay.setVisibility(View.VISIBLE);
+                areControlsVisible = true;
+                btnToggleControls.setText("🎮 Gamepad");
+            }
+        });
+
+        setupKeyButton(R.id.btnW, KeyEvent.KEYCODE_W);
+        setupKeyButton(R.id.btnA, KeyEvent.KEYCODE_A);
+        setupKeyButton(R.id.btnS, KeyEvent.KEYCODE_S);
+        setupKeyButton(R.id.btnD, KeyEvent.KEYCODE_D);
+        setupKeyButton(R.id.btnQ, KeyEvent.KEYCODE_Q);
+        setupKeyButton(R.id.btnEsc, KeyEvent.KEYCODE_ESCAPE);
+    }
+
+    private void setupKeyButton(int buttonId, int keyCode) {
+        Button button = findViewById(buttonId);
+        if (button != null) {
+            button.setOnClickListener(v -> {
+                if (myWebView != null) {
+                    long downTime = System.currentTimeMillis();
+                    KeyEvent downEvent = new KeyEvent(downTime, downTime, KeyEvent.ACTION_DOWN, keyCode, 0);
+                    KeyEvent upEvent = new KeyEvent(downTime, downTime + 50, KeyEvent.ACTION_UP, keyCode, 0);
+                    myWebView.dispatchKeyEvent(downEvent);
+                    myWebView.dispatchKeyEvent(upEvent);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (myWebView.canGoBack()) {
+            myWebView.goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+}
+Verification: Código completo integrado en el proyecto.
+
+¿Qué haces en cuanto guardes este último archivo?
+Ve arriba a la pestaña Actions de tu repositorio.
+
+Verás que la tarea arranca sola (círculo amarillo).
+
+Espera un par de minutos hasta que aparezca el check verde (✔). Entra a la tarea, baja a Artifacts, descarga el archivo comprimido, saca tu APK, instálalo en tu celular y ¡a jugar sin límites!
