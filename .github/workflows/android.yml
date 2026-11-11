@@ -1,0 +1,40 @@
+name: build
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descomprimir proyecto
+        run: |
+          ZIP_FILE=$(find . -maxdepth 2 -type f -iname "*.zip" -print -quit)
+          [ -n "$ZIP_FILE" ] || { echo "No se encontro el ZIP"; exit 1; }
+          unzip -qo "$ZIP_FILE" -d .
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Descargar Ruffle
+        working-directory: FlashLauncher
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/fetch_ruffle.sh
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Compilar APK
+        working-directory: FlashLauncher
+        run: gradle assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FlashLauncher-debug
+          path: FlashLauncher/app/build/outputs/apk/debug/*.apk
